@@ -18,6 +18,8 @@ This file can be downloaded from Google Sheet using "File > Download > Comma Sep
 
 ### How to run the script
 
+**For first time setup:**
+
 First, install all the dependencies:
 
 ```bash
@@ -35,3 +37,10 @@ Finally, you can run the script with:
 python data_pipeline.py path/to/opportunities.csv
 ```
 where filepath is the path to the CSV file
+
+**Then, in the future you can run this to update the database with new opportunities:**
+```bash
+cd scripts/
+source .venv/bin/activate
+python data_pipeline.py path/to/opportunities.csv
+```
