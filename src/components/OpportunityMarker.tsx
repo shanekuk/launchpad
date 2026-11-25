@@ -1,36 +1,12 @@
 import { Marker } from "react-map-gl/mapbox";
-import {
-  Utensils,
-  Leaf,
-  GraduationCap,
-  PawPrint,
-  Home,
-  HeartHandshake,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import type { Opportunity } from "../types";
+import { getCauseStyle } from "../utils/causes";
 
 type Props = {
   opportunity: Opportunity;
   isSelected: boolean;
   onSelect: (id: string) => void;
 };
-
-// colour + icon for each cause, matched by keyword
-const CAUSES: { keyword: string; color: string; Icon: LucideIcon }[] = [
-  { keyword: "Food", color: "#f59e0b", Icon: Utensils },
-  { keyword: "Environment", color: "#16a34a", Icon: Leaf },
-  { keyword: "Education", color: "#2563eb", Icon: GraduationCap },
-  { keyword: "Animal", color: "#9333ea", Icon: PawPrint },
-  { keyword: "Homeless", color: "#e11d48", Icon: Home },
-];
-const DEFAULT_CAUSE = { color: "#64748b", Icon: HeartHandshake };
-
-// use the FIRST listed area, e.g. "Education, Youth" → Education
-function getCauseStyle(areas: string) {
-  const first = areas.split(",")[0].trim();
-  return CAUSES.find((c) => first.includes(c.keyword)) ?? DEFAULT_CAUSE;
-}
 
 export default function OpportunityMarker({
   opportunity,
