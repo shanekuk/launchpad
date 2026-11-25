@@ -1,5 +1,5 @@
-function App() {
-  return null
-}
+import MapPage from "./pages/MapPage";
 
-export default App
+export default function App() {
+  return <MapPage />;
+}
