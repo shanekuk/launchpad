@@ -7,14 +7,14 @@ import Navbar from "./components/Navbar";
 function App() {
   return (
     <>
-    <Navbar/>
-    <Routes>
-      <Route path = "/" element={<OpportunitiesPage />}/>
-      <Route path = "/map" element={<MapPage />}/>
-      <Route path = "/saved" element={<SavedPage />}/>
-    </Routes>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<OpportunitiesPage />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/saved" element={<SavedPage />} />
+      </Routes>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
