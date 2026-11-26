@@ -1,18 +1,21 @@
 import type { CSSProperties } from "react";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, MapPin } from "lucide-react";
 import type { Opportunity } from "../types";
 import { getCauseStyle, splitAreas } from "../utils/causes";
+import { distanceMiles, formatMiles, type LatLng } from "../lib/distance";
 
 type Props = {
   opportunities: Opportunity[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  userLocation: LatLng | null;
 };
 
 export default function Sidebar({
   opportunities,
   selectedId,
   onSelect,
+  userLocation,
 }: Props) {
   const selected = opportunities.find((o) => o.id === selectedId);
 
@@ -21,6 +24,7 @@ export default function Sidebar({
       {selected ? (
         <DetailPlaceholder
           opportunity={selected}
+          userLocation={userLocation}
           onBack={() => onSelect(null)}
         />
       ) : (
@@ -39,6 +43,7 @@ export default function Sidebar({
             <CardPlaceholder
               key={o.id}
               opportunity={o}
+              userLocation={userLocation}
               onSelect={onSelect}
               isLast={i === opportunities.length - 1}
             />
@@ -125,10 +130,12 @@ function domainOf(link: string) {
 // TEMP: replace with the Listings team's OpportunityCard
 function CardPlaceholder({
   opportunity,
+  userLocation,
   onSelect,
   isLast,
 }: {
   opportunity: Opportunity;
+  userLocation: LatLng | null;
   onSelect: (id: string) => void;
   isLast: boolean;
 }) {
@@ -179,6 +186,23 @@ function CardPlaceholder({
         <div style={{ marginTop: 8, fontSize: 13, color: "#64748b" }}>
           {domainOf(opportunity.link)}
         </div>
+
+        {/* distance, under the website – only if location is shared */}
+        {userLocation && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              marginTop: 4,
+              fontSize: 13,
+              color: "#64748b",
+            }}
+          >
+            <MapPin size={14} />
+            {formatMiles(distanceMiles(userLocation, opportunity))}
+          </div>
+        )}
       </div>
     </button>
   );
@@ -187,9 +211,11 @@ function CardPlaceholder({
 // TEMP: replace with the Listings team's OpportunityDetail
 function DetailPlaceholder({
   opportunity,
+  userLocation,
   onBack,
 }: {
   opportunity: Opportunity;
+  userLocation: LatLng | null;
   onBack: () => void;
 }) {
   const { color } = getCauseStyle(opportunity.areas_of_interest);
@@ -255,6 +281,23 @@ function DetailPlaceholder({
       >
         {opportunity.description}
       </p>
+
+      {/* distance from the user – only when they shared their location */}
+      {userLocation && (
+        <p
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            margin: "0 0 16px",
+            fontSize: 14,
+            color: "#64748b",
+          }}
+        >
+          <MapPin size={16} />
+          {formatMiles(distanceMiles(userLocation, opportunity))} away
+        </p>
+      )}
 
       <a
         href={opportunity.link}

@@ -117,6 +117,7 @@ export default function MapPage() {
         opportunities={opportunities}
         selectedId={selectedId}
         onSelect={setSelectedId}
+        userLocation={location}
       />
     </div>
   );
