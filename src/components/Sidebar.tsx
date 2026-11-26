@@ -3,12 +3,15 @@ import { ArrowLeft, ExternalLink, MapPin } from "lucide-react";
 import type { Opportunity } from "../types";
 import { getCauseStyle, splitAreas } from "../utils/causes";
 import { distanceMiles, formatMiles, type LatLng } from "../lib/distance";
+import SortControl, { type SortOption } from "./SortByDistanceDropDown";
 
 type Props = {
   opportunities: Opportunity[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   userLocation: LatLng | null;
+  sortBy: SortOption;
+  onSortChange: (value: SortOption) => void;
 };
 
 export default function Sidebar({
@@ -16,6 +19,8 @@ export default function Sidebar({
   selectedId,
   onSelect,
   userLocation,
+  sortBy,
+  onSortChange,
 }: Props) {
   const selected = opportunities.find((o) => o.id === selectedId);
 
@@ -39,6 +44,10 @@ export default function Sidebar({
           >
             {opportunities.length} opportunities in Los Angeles
           </h2>
+          {/* Sort by dropdown, under the heading */}
+          <div style={{ padding: "8px 20px 4px" }}>
+            <SortControl value={sortBy} onChange={onSortChange} />
+          </div>
           {opportunities.map((o, i) => (
             <CardPlaceholder
               key={o.id}

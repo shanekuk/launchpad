@@ -1,14 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Map, { NavigationControl } from "react-map-gl/mapbox";
 import type { MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import OpportunityMarker from "../components/OpportunityMarker";
 import { useOpportunities } from "../hooks/useOpportunities";
 import Sidebar from "../components/Sidebar";
+// NEW
 import { useUserLocation } from "../hooks/useUserLocation";
 import UserLocationDot from "../components/UserLocationDot";
 import LocateUserButton from "../components/LocateUserButton";
-import type { LatLng } from "../lib/distance";
+import LocationPrompt from "../components/LocationPrompt";
+import type { SortOption } from "../components/SortByDistanceDropDown";
+import { distanceMiles, type LatLng } from "../lib/distance";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 
@@ -29,11 +32,11 @@ export default function MapPage() {
   const { opportunities, isLoading, error } = useOpportunities();
   const mapRef = useRef<MapRef>(null);
 
-  // Asks the browser for the user's location when the map opens.
+  // NEW: asks the browser for the user's location when the map opens.
   // location is null until they allow it (and stays null if they don't).
   const { location, status: locationStatus, requestLocation } = useUserLocation();
 
-  // Short message near the locate-me button when we can't get a location
+  // NEW: short message near the locate-me button when we can't get a location
   const [locationHint, setLocationHint] = useState<string | null>(null);
 
   // hide the message after 5 seconds
@@ -43,7 +46,7 @@ export default function MapPage() {
     return () => clearTimeout(t);
   }, [locationHint]);
 
-  // Asks if this point inside the area the map can show?
+  // NEW: is this point inside the area the map can show?
   function isInLA(loc: LatLng) {
     const [[west, south], [east, north]] = LA_BOUNDS;
     return loc.lng >= west && loc.lng <= east && loc.lat >= south && loc.lat <= north;
@@ -66,8 +69,8 @@ export default function MapPage() {
     });
   }
 
-  // crosshair button – go to the user, or ask for their location first
-  async function handleLocateMe() {
+  // NEW: crosshair button – go to the user, or ask for their location first
+  async function handleLocateUser() {
     if (location) {
       flyToUser(location);
       return;
@@ -87,6 +90,37 @@ export default function MapPage() {
       );
     }
   }
+
+  // NEW: Sort by
+  const [sortBy, setSortBy] = useState<SortOption>("default");
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+
+  // the sidebar list – closest first when "Closest distance" is picked
+  const sortedOpportunities = useMemo(() => {
+    if (sortBy !== "closest" || !location) return opportunities;
+    return [...opportunities].sort(
+      (a, b) => distanceMiles(location, a) - distanceMiles(location, b)
+    );
+  }, [opportunities, sortBy, location]);
+
+  // picking "Closest distance" without a location opens the popup instead
+  function handleSortChange(next: SortOption) {
+    if (next === "closest" && !location) {
+      setShowLocationPrompt(true);
+      return;
+    }
+    setSortBy(next);
+  }
+
+  // "Share location" in the popup
+  async function handleShareLocation() {
+    const result = await requestLocation();
+    if (!result.location) return; // popup stays open and says why
+    setSortBy("closest");
+    setShowLocationPrompt(false);
+  }
+
+  const closeLocationPrompt = useCallback(() => setShowLocationPrompt(false), []);
 
   // whenever the selection changes, fly the map to that opportunity
   useEffect(() => {
@@ -164,25 +198,27 @@ export default function MapPage() {
           />
         ))}
 
-        {/* blue dot, only when the user shared their location */}
+        {/* NEW: blue dot, only when the user shared their location */}
         {location && <UserLocationDot position={location} />}
       </Map>
 
       {/* the floating panel sits on top of the map */}
       <Sidebar
-        opportunities={opportunities}
+        opportunities={sortedOpportunities}
         selectedId={selectedId}
         onSelect={setSelectedId}
         userLocation={location}
+        sortBy={sortBy}
+        onSortChange={handleSortChange}
       />
 
-      {/* crosshair button, bottom right */}
+      {/* NEW: crosshair button, bottom right */}
       <LocateUserButton
-        onClick={handleLocateMe}
+        onClick={handleLocateUser}
         loading={locationStatus === "loading"}
       />
 
-      {/* message when we couldn't get the location */}
+      {/* NEW: message when we couldn't get the location */}
       {locationHint && (
         <div
           role="status"
@@ -205,6 +241,14 @@ export default function MapPage() {
           {locationHint}
         </div>
       )}
+
+      {/* NEW: "Turn on location to sort by distance" popup */}
+      <LocationPrompt
+        open={showLocationPrompt}
+        status={locationStatus}
+        onShare={handleShareLocation}
+        onClose={closeLocationPrompt}
+      />
     </div>
   );
 }
