@@ -5,6 +5,9 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import OpportunityMarker from "../components/OpportunityMarker";
 import { useOpportunities } from "../hooks/useOpportunities";
 import Sidebar from "../components/Sidebar";
+// NEW
+import { useUserLocation } from "../hooks/useUserLocation";
+import UserLocationDot from "../components/UserLocationDot";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 
@@ -24,6 +27,10 @@ export default function MapPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { opportunities, isLoading, error } = useOpportunities();
   const mapRef = useRef<MapRef>(null);
+
+  // NEW: asks the browser for the user's location when the map opens.
+  // location is null until they allow it (and stays null if they don't).
+  const { location } = useUserLocation();
 
   // whenever the selection changes, fly the map to that opportunity
   useEffect(() => {
@@ -100,6 +107,9 @@ export default function MapPage() {
             onSelect={setSelectedId}
           />
         ))}
+
+        {/* NEW: blue dot, only when the user shared their location */}
+        {location && <UserLocationDot position={location} />}
       </Map>
 
       {/* the floating panel sits on top of the map */}
